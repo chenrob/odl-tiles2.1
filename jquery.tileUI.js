@@ -7,6 +7,8 @@
 	
 	var options;
 	var container;
+
+	var $tiles = [];
 	
 	var methods = {
 		init: function() {
@@ -21,6 +23,10 @@
 			}, settings);
 			
 			container.css({'position': 'relative', 'margin': '0 auto'});
+
+			container.find('.tile').each(function() {
+				$tiles.push($(this));
+			});
 			
 			//on window resize, run handler to reposition the tiles
 			$(window).bind('resize.tiles', methods.onResize);
@@ -69,22 +75,14 @@
 				container.css({'width': width + 'px'});
 				
 				//place tiles
-				tileElements.each(function(index, tileElement) {
-					methods.place(tileElement);
-				});
+				for (var k in $tiles)
+					methods.place($tiles[k]);
 			}
 		},
-		place: function(tile) {
-			//handle weird case where we get empty Text node from ajax
-			if (tile.nodeType == 3) return;
-			
-			//make sure all images in the tile have width/height set in css or on the image tag
-			//so the dimension calculations are performed correctly
-			tile = $(tile);
-			
+		place: function($tile) {
 			var placementIndex = methods.shortest();
-			columns[placementIndex].append(tile);
-			heights[placementIndex] += tile.outerHeight(true);
+			columns[placementIndex].append($tile);
+			heights[placementIndex] += $tile.outerHeight(true);
 		},
 		shortest: function () {
 			var shortest = 0;
@@ -189,7 +187,14 @@
 						
 						// place the tiles
 						displayTiles.each(function(index, tileElement) {
-							methods.place(tileElement);
+							var $this = $(this);
+
+							if ($this.is('script') || tileElement.nodeType == 3)
+								return;
+
+							$tiles.push($this);
+
+							methods.place($this);
 							numTilesToPlace ++;
 							$(tileElement).css({visibility:'visible'}); // show the elements
 						});
