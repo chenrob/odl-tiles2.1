@@ -11,8 +11,7 @@
 	var methods = {
 		init: function(settings) {
 			options = $.extend({
-				numCols: 3,
-				vertSpacing: 14,
+				vertSpacing: 10,
 				horizSpacing: 10,
 				maxPages: 1
 			}, settings);
@@ -20,19 +19,37 @@
 			container = this;
 			this.css({position: 'relative'});
 			
-			for (var index = 0; index < options.numCols; index++)
-			{
-				heights[index] = 0;
-				tiles[index] = [];
-			}
+			//on window resize, run handler to reposition the tiles
+			$(window).bind('resize.tiles', methods.onResize);
 			
-			//place tiles
-			this.children().each(function(index, tileElement) {
-				methods.place(tileElement);
-			});
+			//also trigger it immediately so the tiles are placed
+			methods.onResize();
 			
 			if (options.infiniteScroll && !noMoreData)
 				methods.infiniteScroll();
+		},
+		onResize: function() {
+			var tileElements = container.children();
+			
+			//when window is resized, calculate # columns and re-place all tiles
+			var windowWidth = $(window).width();
+			var tileWidth = tileElements.first().width();
+			var numCols = Math.max(Math.floor(windowWidth / (tileWidth + options.vertSpacing)), 1); //ensure we always have at least 1 tile
+			
+			for (var i = 0; i < numCols; i++)
+			{
+				heights[i] = 0;
+				tiles[i] = [];
+			}
+			
+			//use numCols to determine true width of tiles; use it to center the container
+			var trueWidth = numCols * (tileWidth + options.vertSpacing) - options.vertSpacing;
+			container.css({'left': (windowWidth - trueWidth)/2 + 'px'})
+			
+			//place tiles
+			tileElements.each(function(index, tileElement) {
+				methods.place(tileElement);
+			});
 		},
 		place: function(tile) {
 			//make sure all images in the tile have width/height set in css or on the image tag
