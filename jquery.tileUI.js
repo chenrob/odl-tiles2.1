@@ -73,6 +73,9 @@
 			}
 		},
 		place: function(tile) {
+			//handle weird case where we get empty Text node from ajax
+			if (tile.nodeType == 3) return;
+			
 			//make sure all images in the tile have width/height set in css or on the image tag
 			//so the dimension calculations are performed correctly
 			tile = $(tile);
@@ -198,7 +201,8 @@
 					}
 				}
 			});
-		}
+		},
+		setOption: function(k, v) { options[k] = v; }
 	};
 	
 	$.fn.tileUI = function(method) {
