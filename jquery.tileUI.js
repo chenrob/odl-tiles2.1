@@ -25,6 +25,8 @@
 			//on window resize, run handler to reposition the tiles
 			$(window).bind('resize.tiles', methods.onResize);
 			methods.onResize(); //trigger immediately to position tiles
+
+			container.css('visibility', 'visible');
 			
 			if (options.infiniteScroll)
 				methods.infiniteScroll();
