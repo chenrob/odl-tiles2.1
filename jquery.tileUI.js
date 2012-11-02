@@ -174,7 +174,7 @@
 				data: params,
 				dataType: 'html',
 				success: function(response) {
-					if (!response.trim()) //response returned nothing but whitespace
+					if (!$.trim(response)) //response returned nothing but whitespace
 					{
 						noMoreData = true;
 					}
