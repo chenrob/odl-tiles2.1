@@ -2,6 +2,8 @@ odl-tiles2.1
 ============
 Column-centric layout engine for tiles with asymmetric heights.
 
+To keep the readme short, [I have written a separate document](https://github.com/chenrob/random_ramblings/blob/master/odl-tiles2.1.md) describing "how" and "why" I implemented this differently from current implementations of Pinterest-style tile layouts.
+
 Requirements
 ------------
 This has been developed against jQuery 1.7.1 and may possibly be compatible with earlier versions of jQuery.
