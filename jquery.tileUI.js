@@ -2,7 +2,7 @@
 	var isLoading = false;
 	var noMoreData = false;
 	var heights = [];
-	var tiles = [];
+	var columns = [];
 	var pagesShown = 1;
 	
 	var options;
@@ -11,45 +11,63 @@
 	var methods = {
 		init: function(settings) {
 			options = $.extend({
-				vertSpacing: 10,
-				horizSpacing: 10,
-				maxPages: 1
+				columnGap: 15,
+				maxPages: 1,
+				minCols: 1
 			}, settings);
 			
 			container = this;
-			this.css({position: 'relative'});
+			container.css({'position': 'relative', 'margin': '0 auto'});
 			
 			//on window resize, run handler to reposition the tiles
 			$(window).bind('resize.tiles', methods.onResize);
+			methods.onResize(); //trigger immediately to position tiles
 			
-			//also trigger it immediately so the tiles are placed
-			methods.onResize();
-			
-			if (options.infiniteScroll && !noMoreData)
+			if (options.infiniteScroll)
 				methods.infiniteScroll();
 		},
 		onResize: function() {
-			var tileElements = container.children();
+			var tileElements = container.find('.tile');
 			
-			//when window is resized, calculate # columns and re-place all tiles
+			//how many columns can the window hold?
 			var windowWidth = $(window).width();
 			var tileWidth = tileElements.first().width();
-			var numCols = Math.max(Math.floor(windowWidth / (tileWidth + options.vertSpacing)), 1); //ensure we always have at least 1 tile
+			var numCols = Math.floor(windowWidth / (tileWidth + options.columnGap));
+			numCols = Math.max(numCols, options.minCols); //ensure at least "minColumns" number of columns
 			
-			for (var i = 0; i < numCols; i++)
+			//if #cols change, reposition the tiles
+			if (numCols != heights.length)
 			{
-				heights[i] = 0;
-				tiles[i] = [];
+				columns = [];
+				heights = [];
+				
+				//temporarily remove tiles (will reattach later)
+				//but get rid of the columns since we're going to create new ones
+				tileElements.detach();
+				container.find('.tile-column').remove();
+				
+				for (var i = 0; i < numCols; i++)
+				{
+					var css = {
+						'position': 'absolute',
+						'left': ((tileWidth + options.columnGap) * i) + 'px',
+						'width': tileWidth + 'px'
+					};
+					
+					heights[i] = 0;
+					columns[i] = $('<div class="tile-column pull-left"></div>')
+					             .css(css).appendTo(container);
+				}
+				
+				//keep the container centered
+				var width = numCols * (tileWidth + options.columnGap) - options.columnGap;
+				container.css({'width': width + 'px'});
+				
+				//place tiles
+				tileElements.each(function(index, tileElement) {
+					methods.place(tileElement);
+				});
 			}
-			
-			//use numCols to determine true width of tiles; use it to center the container
-			var trueWidth = numCols * (tileWidth + options.vertSpacing) - options.vertSpacing;
-			container.css({'left': (windowWidth - trueWidth)/2 + 'px'})
-			
-			//place tiles
-			tileElements.each(function(index, tileElement) {
-				methods.place(tileElement);
-			});
 		},
 		place: function(tile) {
 			//make sure all images in the tile have width/height set in css or on the image tag
@@ -57,27 +75,8 @@
 			tile = $(tile);
 			
 			var placementIndex = methods.shortest();
-			var tileWidth = tile.width();
-			var left = placementIndex * (tileWidth + options.vertSpacing);
-			var top = heights[placementIndex];
-			heights[placementIndex] += tile.height();
-			
-			if (top > 0) //don't add unnecessary whitespace to first row
-			{
-				top += options.horizSpacing;
-				heights[placementIndex] += options.horizSpacing;
-			}
-			
-			tile.data('columnIndex', placementIndex);
-			tile.data('position', tiles[placementIndex].length);
-			
-			tiles[placementIndex].push(tile);
-			
-			tile.css({position: 'absolute', left: left + 'px', top: top + 'px'});
-			container.css({height: methods.tallestCol()});
-		},
-		tallestCol: function () {
-			return Math.max.apply(Math, heights);	
+			columns[placementIndex].append(tile);
+			heights[placementIndex] += tile.outerHeight(true);
 		},
 		shortest: function () {
 			var shortest = 0;
@@ -169,7 +168,7 @@
 				success: function(response) {
 					if (!response.trim()) //response returned nothing but whitespace
 					{
-						self._noMoreData = true;
+						noMoreData = true;
 					}
 					else
 					{
@@ -196,32 +195,6 @@
 					}
 				}
 			});
-		},
-		reTile: function(tile) {
-			tile = $(tile);
-			
-			var tileData = tile.data();
-			var column = tiles[tileData.columnIndex];
-			var currentTilePosition = tileData.position;
-			
-			var currentTileHeightWithPadding = tile.position().top + tile.height() + options.horizSpacing;
-			var nextTileTopPosition = $(column[currentTilePosition + 1]).position().top;
-			var tileHeightDiff = currentTileHeightWithPadding - nextTileTopPosition;
-			if (tileHeightDiff !== 0)
-			{
-				var newTopPos = 0;
-				var $tileToResize;
-				
-				for (var i = currentTilePosition + 1; i < column.length; i++)
-				{
-					$tileToResize = $(column[i]);
-					newTopPos = $tileToResize.position().top + tileHeightDiff;
-					$tileToResize.css({top: newTopPos});
-				}
-				
-				heights[tileData.columnIndex] += tileHeightDiff;
-				container.css({height: methods.tallestCol()});
-			}
 		}
 	};
 	
