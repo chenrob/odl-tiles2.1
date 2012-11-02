@@ -9,14 +9,17 @@
 	var container;
 	
 	var methods = {
-		init: function(settings) {
+		init: function() {
+			container = this;
+			
+			var settings = container.data('tileuiOptions') || {};
+			
 			options = $.extend({
 				columnGap: 15,
 				maxPages: 1,
 				minCols: 1
 			}, settings);
 			
-			container = this;
 			container.css({'position': 'relative', 'margin': '0 auto'});
 			
 			//on window resize, run handler to reposition the tiles
