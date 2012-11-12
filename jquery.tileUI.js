@@ -144,14 +144,14 @@
 					else
 					{
 						// detect when the viewer gets close to the bottom of the page
-						scrollThreshold = $(window).height() * 0.8;
+						scrollThreshold = $(document).height() * 0.8;
 						scrollTop = $(document).scrollTop();
 					}
 
 					if (noMoreData) return false;
 					if (pagesShown >= options.maxPages) return false;
 					if (isLoading) return false;
-					if (scrollTop < scrollThreshold) return false;
+					if (scrollTop + $(window).height() < scrollThreshold) return false;
 					
 					//self._showLoading(); // TODO: implement this if I have time (@Teju)
 
